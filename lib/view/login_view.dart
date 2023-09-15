@@ -55,36 +55,6 @@ class _LoginViewState extends State<LoginView> {
     });
   }
 
-  void verifyUserPhoneNumber() {
-    // userNumber = "91${phoneController.text}";
-    auth.verifyPhoneNumber(
-      phoneNumber: userNumber,
-      timeout: const Duration(seconds: 90),
-      verificationCompleted: (PhoneAuthCredential credential) async {
-        await auth.signInWithCredential(credential).then(
-              (value) => print('Signup Successfully'),
-            );
-      },
-      verificationFailed: (FirebaseAuthException e) {
-        otpSentWait = true;
-        setState(() {});
-        print(e.message);
-        Fluttertoast.showToast(msg: 'Verification failed: ${e.message}');
-      },
-      codeSent: (String verificationId, int? resendToken) {
-        receivedID = verificationId;
-        otpFieldVisibility = true;
-        otpSentWait = true;
-        Fluttertoast.showToast(msg: 'Verification code sent');
-
-        setState(() {
-          // startTimer();
-        });
-      },
-      codeAutoRetrievalTimeout: (String verificationId) {},
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
@@ -239,7 +209,7 @@ class _LoginViewState extends State<LoginView> {
                                   const EdgeInsets.symmetric(horizontal: 25),
                               child: GestureDetector(
                                 onTap: () {
-                                  verifyUserPhoneNumber();
+                                  // verifyUserPhoneNumber();
                                   Navigator.push(
                                       context,
                                       MaterialPageRoute(

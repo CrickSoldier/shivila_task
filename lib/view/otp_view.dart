@@ -32,7 +32,7 @@ class _OTPViewState extends State<OTPView> {
   final allUserData = GetStorage();
   bool isUserRegistered = false;
 
-  String userNumber = '';
+  // String userNumber = '';
   String userToken = '';
 
   FirebaseAuth auth = FirebaseAuth.instance;
@@ -46,6 +46,37 @@ class _OTPViewState extends State<OTPView> {
   void initState() {
     super.initState();
     firebaseCloudMessaging_Listeners();
+    verifyUserPhoneNumber();
+  }
+
+  void verifyUserPhoneNumber() {
+    // userNumber = "91${phoneController.text}";
+    auth.verifyPhoneNumber(
+      phoneNumber: widget.usernumber,
+      timeout: const Duration(seconds: 90),
+      verificationCompleted: (PhoneAuthCredential credential) async {
+        await auth.signInWithCredential(credential).then(
+              (value) => print('Signup Successfully'),
+            );
+      },
+      verificationFailed: (FirebaseAuthException e) {
+        otpSentWait = true;
+        setState(() {});
+        print(e.message);
+        Fluttertoast.showToast(msg: 'Verification failed: ${e.message}');
+      },
+      codeSent: (String verificationId, int? resendToken) {
+        receivedID = verificationId;
+        otpFieldVisibility = true;
+        otpSentWait = true;
+        Fluttertoast.showToast(msg: 'Verification code sent');
+
+        setState(() {
+          // startTimer();
+        });
+      },
+      codeAutoRetrievalTimeout: (String verificationId) {},
+    );
   }
 
   void firebaseCloudMessaging_Listeners() {
@@ -60,9 +91,11 @@ class _OTPViewState extends State<OTPView> {
   }
 
   Future<void> verifyOTPCode() async {
+    String smsCode =
+        otp1.text + otp2.text + otp3.text + otp4.text + otp5.text + otp6.text;
     PhoneAuthCredential credential = PhoneAuthProvider.credential(
       verificationId: receivedID,
-      smsCode: otpController.text,
+      smsCode: smsCode,
     );
     try {
       await auth.signInWithCredential(credential).then((value) => {
@@ -253,7 +286,9 @@ class _OTPViewState extends State<OTPView> {
                                   ),
                                   child: TextField(
                                     // maxLength: 1,
-                                    controller: otp1,
+                                    style: const TextStyle(color: Colors.white),
+
+                                    controller: otp2,
                                     keyboardType: TextInputType.number,
                                   ),
                                 ),
@@ -266,7 +301,9 @@ class _OTPViewState extends State<OTPView> {
                                   ),
                                   child: TextField(
                                     // maxLength: 1,
-                                    controller: otp1,
+                                    style: const TextStyle(color: Colors.white),
+
+                                    controller: otp3,
                                     keyboardType: TextInputType.number,
                                   ),
                                 ),
@@ -279,7 +316,9 @@ class _OTPViewState extends State<OTPView> {
                                   ),
                                   child: TextField(
                                     // maxLength: 1,
-                                    controller: otp1,
+                                    style: const TextStyle(color: Colors.white),
+
+                                    controller: otp4,
                                     keyboardType: TextInputType.number,
                                   ),
                                 ),
@@ -292,7 +331,9 @@ class _OTPViewState extends State<OTPView> {
                                   ),
                                   child: TextField(
                                     // maxLength: 1,
-                                    controller: otp1,
+                                    style: const TextStyle(color: Colors.white),
+
+                                    controller: otp5,
                                     keyboardType: TextInputType.number,
                                   ),
                                 ),
@@ -305,7 +346,8 @@ class _OTPViewState extends State<OTPView> {
                                   ),
                                   child: TextField(
                                     // maxLength: 1,
-                                    controller: otp1,
+                                    controller: otp6,
+                                    style: const TextStyle(color: Colors.white),
                                     keyboardType: TextInputType.number,
                                   ),
                                 ),
@@ -345,11 +387,8 @@ class _OTPViewState extends State<OTPView> {
                                   const EdgeInsets.symmetric(horizontal: 25),
                               child: GestureDetector(
                                 onTap: () {
-                                  Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                          builder: (context) =>
-                                              const HomeView()));
+                                  verifyOTPCode();
+                                  setState(() {});
                                 },
                                 child: Container(
                                   height: size.height * .06,
