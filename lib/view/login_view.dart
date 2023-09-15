@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:shivila/view/otp_view.dart';
 
 class LoginView extends StatefulWidget {
@@ -54,78 +55,15 @@ class _LoginViewState extends State<LoginView> {
     });
   }
 
-  void startTimer() {
-    countdownTimer =
-        Timer.periodic(const Duration(seconds: 1), (_) => setCountDown());
-  }
-
-  void setCountDown() {
-    const reduceSecondsBy = 1;
-    setState(() {
-      final seconds = myDuration.inSeconds - reduceSecondsBy;
-      if (seconds < 0) {
-        resendOtpVisibility = true;
-        countdownTimer!.cancel();
-      } else {
-        myDuration = Duration(seconds: seconds);
-      }
-    });
-  }
-
-  void validatePhoneNumber(BuildContext context) {
-    if (userNumber.isEmpty || userNumber.length < 10) {
-      showDialog<void>(
-        context: context,
-        barrierDismissible: false, // user must tap button!
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: const Text(
-              'Oh you missed it!',
-              style: TextStyle(
-                  color: Colors.red, fontWeight: FontWeight.bold, fontSize: 28),
-            ),
-            content: const SingleChildScrollView(
-              child: ListBody(
-                children: <Widget>[
-                  Text(
-                    'Please enter a valid phone number?',
-                    style: TextStyle(
-                        color: Colors.black, fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-            ),
-            actions: <Widget>[
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color.fromARGB(255, 38, 11, 126),
-                  // onPrimary: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(15.0),
-                  ),
-                ),
-                child: const Text("Ok"),
-              ),
-            ],
-          );
-        },
-      );
-    } else {
-      userRegistered();
-    }
-  }
-
   void verifyUserPhoneNumber() {
+    // userNumber = "91${phoneController.text}";
     auth.verifyPhoneNumber(
       phoneNumber: userNumber,
       timeout: const Duration(seconds: 90),
       verificationCompleted: (PhoneAuthCredential credential) async {
-        await auth.signInWithCredential(credential).then((value) => {
-              // setState(() {}),
-            });
+        await auth.signInWithCredential(credential).then(
+              (value) => print('Signup Successfully'),
+            );
       },
       verificationFailed: (FirebaseAuthException e) {
         otpSentWait = true;
@@ -140,144 +78,11 @@ class _LoginViewState extends State<LoginView> {
         Fluttertoast.showToast(msg: 'Verification code sent');
 
         setState(() {
-          startTimer();
+          // startTimer();
         });
       },
-      codeAutoRetrievalTimeout: (String verificationId) {
-        //         otpSentWait = true;
-        // setState(() {});
-      },
+      codeAutoRetrievalTimeout: (String verificationId) {},
     );
-  }
-
-  void resendOtp() {
-    otpSentWait = false;
-    setState(() {});
-    verifyUserPhoneNumber();
-  }
-
-  Future<void> verifyOTPCode() async {
-    PhoneAuthCredential credential = PhoneAuthProvider.credential(
-      verificationId: receivedID,
-      smsCode: otpController.text,
-    );
-    try {
-      await auth.signInWithCredential(credential).then((value) => {
-            signIn.write('isSignIn', true),
-            userData(),
-            if (otpSentWait && isUserRegistered)
-              {
-                Navigator.pushReplacement(context,
-                    MaterialPageRoute(builder: (context) => const OTPView())),
-              }
-            else
-              {
-                Fluttertoast.showToast(
-                    msg:
-                        'This number is not registered! Please Sign Up first!'),
-              }
-          });
-    } on FirebaseAuthException catch (e) {
-      otpSentWait = true;
-      setState(() {});
-      Fluttertoast.showToast(msg: 'Verification failed: ${e.message}');
-    }
-  }
-
-  Future<void> userRegistered() async {
-    // CollectionReference reference =
-    await FirebaseFirestore.instance
-        .collection('Users')
-        .where('phoneNumber', isEqualTo: userNumber)
-        .get()
-        .then((value) {
-      if (value.docs.isNotEmpty) {
-        setState(() {
-          isUserRegistered = true;
-        });
-      } else {
-        setState(() {
-          isUserRegistered = false;
-        });
-      }
-    });
-
-    if (isUserRegistered) {
-      otpSentWait = false;
-      setState(() {});
-      verifyUserPhoneNumber();
-      // ignore: use_build_context_synchronously
-      showDialog<void>(
-        context: context,
-        barrierDismissible: false, // user must tap button!
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: const Text(
-              'Hold On!',
-              style: TextStyle(
-                  color: Colors.orange,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 28),
-            ),
-            content: const SingleChildScrollView(
-              child: ListBody(
-                children: <Widget>[
-                  Text(
-                    'We are checking that You are not a Robot for Security Reasons! \n \nPlease wait...',
-                    style: TextStyle(
-                        color: Colors.black, fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-            ),
-            actions: <Widget>[
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color.fromARGB(255, 38, 11, 126),
-                  // onPrimary: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(15.0),
-                  ),
-                ),
-                child: const Text("Ok"),
-              ),
-            ],
-          );
-        },
-      );
-    } else {
-      Fluttertoast.showToast(
-          msg: 'This number is NOT Registered with us! Please Sign Up first!');
-    }
-  }
-
-  Future<void> userData() async {
-    // CollectionReference reference =
-    User userAuth = FirebaseAuth.instance.currentUser!;
-    await FirebaseFirestore.instance
-        .collection("Users")
-        .doc(userAuth.uid)
-        .update({
-      "deviceToken": userToken,
-    });
-
-    await FirebaseFirestore.instance
-        .collection('Users')
-        .where('phoneNumber', isEqualTo: userNumber)
-        .get()
-        .then((value) {
-      // allUserData.write("firstName", value.docs[0]['firstName']);
-      // allUserData.write("lastName", value.docs[0]['lastName']);
-      // allUserData.write("phoneNumber", value.docs[0]['phoneNumber']);
-      // allUserData.write("uid", value.docs[0]['uid']);
-    }).onError((error, stackTrace) {
-      setState(() {
-        isUserRegistered = false;
-      });
-    });
   }
 
   @override
@@ -367,7 +172,7 @@ class _LoginViewState extends State<LoginView> {
                       height: size.height * .05,
                     ),
                     Container(
-                      height: size.height * .4,
+                      // height: size.height * .4,
                       width: double.infinity,
                       decoration: BoxDecoration(
                           color: Colors.black.withOpacity(.4),
@@ -406,29 +211,71 @@ class _LoginViewState extends State<LoginView> {
                               height: size.height * .05,
                             ),
                             Container(
-                              height: size.height * .06,
+                              // height: size.height * .06,
                               width: double.infinity,
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(10),
                                 color: Colors.black.withOpacity(.7),
                               ),
-                              child: TextField(
-                                controller: otpController,
-                                keyboardType: TextInputType.number,
-                                decoration: InputDecoration(
-                                  fillColor: Colors.white,
-                                  prefixIcon: Icon(
-                                    Icons.phone,
-                                    color: Colors.white.withOpacity(.6),
-                                  ),
+                              child: IntlPhoneField(
+                                controller: phoneController,
+                                initialCountryCode: 'IN',
+                                style: const TextStyle(color: Colors.white),
+                                decoration: const InputDecoration(
                                   hintText: 'Mobile Number',
-                                  labelText: 'Mobile Number',
+                                  // labelText: 'Phone',
                                   // border: OutlineInputBorder(),
+                                ),
+                                onChanged: (val) {
+                                  userNumber = val.completeNumber;
+                                },
+                              ),
+                            ),
+                            SizedBox(
+                              height: size.height * .04,
+                            ),
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 25),
+                              child: GestureDetector(
+                                onTap: () {
+                                  verifyUserPhoneNumber();
+                                  Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) => OTPView(
+                                                usernumber: userNumber,
+                                              )));
+                                },
+                                child: Container(
+                                  height: size.height * .06,
+                                  width: double.infinity,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(10),
+                                    color:
+                                        const Color.fromARGB(255, 212, 175, 55),
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        "Send OTP",
+                                        style: GoogleFonts.quicksand(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white),
+                                      ),
+                                      const SizedBox(
+                                        width: 5,
+                                      ),
+                                      Image.asset("assets/icons/right.png")
+                                    ],
+                                  ),
                                 ),
                               ),
                             ),
                             SizedBox(
-                              height: size.height * .08,
+                              height: size.height * .02,
                             ),
                             Row(
                               children: [
@@ -445,19 +292,9 @@ class _LoginViewState extends State<LoginView> {
                                 ),
                                 Flexible(
                                   flex: 1,
-                                  child: GestureDetector(
-                                    onTap: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                            builder: (context) =>
-                                                const OTPView()),
-                                      );
-                                    },
-                                    child: Text('New User?',
-                                        style: GoogleFonts.quicksand(
-                                            fontSize: 12, color: Colors.white)),
-                                  ),
+                                  child: Text('New User?',
+                                      style: GoogleFonts.quicksand(
+                                          fontSize: 12, color: Colors.white)),
                                 ),
                                 const SizedBox(
                                   width: 10,
