@@ -61,6 +61,7 @@ class _LoginViewState extends State<LoginView> {
     return Scaffold(
         body: SafeArea(
       child: Container(
+          height: double.infinity,
           decoration: const BoxDecoration(
             image: DecorationImage(
               image: AssetImage(

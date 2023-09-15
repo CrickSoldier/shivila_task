@@ -120,6 +120,7 @@ class _OTPViewState extends State<OTPView> {
     return Scaffold(
         body: SafeArea(
       child: Container(
+          height: double.infinity,
           decoration: const BoxDecoration(
             image: DecorationImage(
               image: AssetImage(
