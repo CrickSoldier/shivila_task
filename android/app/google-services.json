@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "164963028920",
+    "project_id": "shivila-f8bfe",
+    "storage_bucket": "shivila-f8bfe.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:164963028920:android:dacb41cb02f51784b6094d",
+        "android_client_info": {
+          "package_name": "com.example.shivila"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCvE80LAsYnPBW0E7xispyWBANhLpkXmwM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
